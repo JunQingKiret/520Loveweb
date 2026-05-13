@@ -7,6 +7,7 @@
 - 已创建 GitHub 仓库。
 - 本地代码已经提交到仓库。
 - 仓库默认分支为 `main`。如果你的默认分支是 `master`，需要把 `.github/workflows/deploy.yml` 中的 `branches: [main]` 改为 `branches: [master]`。
+- 仓库允许 GitHub Actions 读写 Pages。如果组织策略禁止自动启用 Pages，需要手动在 `Settings -> Pages` 中选择 `GitHub Actions`。
 
 ## 2. 项目中的部署配置
 
@@ -25,6 +26,22 @@
 - 执行 `pnpm build`。
 - 上传 `dist/`。
 - 发布到 GitHub Pages。
+
+工作流已经配置：
+
+```yaml
+enablement: true
+```
+
+这会让 `actions/configure-pages` 在仓库尚未启用 Pages 时自动启用 Pages，避免 `get-a-apiname-pages-site` 404。
+
+工作流也设置了：
+
+```yaml
+FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+```
+
+这用于提前切换 GitHub 官方 Actions 到 Node.js 24，避免 Node.js 20 弃用警告影响后续运行。
 
 ## 3. Vite 路径配置说明
 
@@ -156,3 +173,25 @@ on:
   push:
     branches: [你的分支名]
 ```
+
+### `get-a-apiname-pages-site` 未找到
+
+报错示例：
+
+```text
+Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions.
+```
+
+原因通常是仓库还没有启用 GitHub Pages。当前工作流已经给 `actions/configure-pages@v5` 增加：
+
+```yaml
+with:
+  enablement: true
+```
+
+如果仍然失败，按以下顺序检查：
+
+- 进入 `Settings -> Pages`，确认 Source 是 `GitHub Actions`。
+- 进入 `Settings -> Actions -> General`，确认 Actions 没有被禁用。
+- 如果仓库属于组织，确认组织策略允许 Actions 管理 Pages。
+- 确认当前分支是工作流监听的分支，例如 `main`。
